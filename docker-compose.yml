@@ -1,0 +1,51 @@
+# HelloWorldDocker/docker-compose.yml
+services:
+
+  traefik:
+    image: traefik:v3.0
+    command:
+      - --configFile=/etc/traefik/traefik.yml 
+    ports:
+      - "80:80"
+      - "8080:8080" # dashboard
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web
+      
+  app1:
+    build:
+      context: ./app1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app1.rule=PathPrefix(`/app1`)"
+      - "traefik.http.routers.app1.entrypoints=web"
+      - "traefik.http.services.app1.loadbalancer.server.port=4200"
+      - "traefik.http.middlewares.app1-strip.prefixes=/app1"
+      - "traefik.http.routers.app1.middlewares=app1-strip"
+    networks:
+      - web
+    volumes:
+      - ./app1:/app
+      - /app/node_modules
+  
+  app2:
+    build:
+      context: ./app2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app2.rule=PathPrefix(`/app2`)"
+      - "traefik.http.routers.app2.entrypoints=web"
+      - "traefik.http.services.app2.loadbalancer.server.port=4200"
+      - "traefik.http.middlewares.app1-strip.prefixes=/app2 "
+      - "traefik.http.routers.app1.middlewares=app1-strip"
+    networks:
+      - web
+    volumes:
+      - ./app2:/app
+      - /app/node_modules
+
+networks:
+  web:
+    driver: bridge

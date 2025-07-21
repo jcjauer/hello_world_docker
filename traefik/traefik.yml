@@ -1,0 +1,11 @@
+# HelloWorldDocker/traefik/traefik.yml
+entryPoints:
+  web:
+    address: ":80"
+
+api:
+  dashboard: true
+
+providers:
+  docker:
+    exposedByDefault: false
